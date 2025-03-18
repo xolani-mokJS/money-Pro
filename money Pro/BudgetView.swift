@@ -9,6 +9,7 @@ struct BudgetView: View {
     @State private var transferAmount = ""
     @State private var selectedSourceBalanceId: UUID?
     @State private var selectedDestinationBalanceId: UUID?
+    @FocusState private var isTransferAmountFocused: Bool
     
     private var totalBalance: Double {
         budgetStore.balances.reduce(0) { $0 + $1.amount }
@@ -56,22 +57,40 @@ struct BudgetView: View {
                                 Text(balance.name).tag(Optional(balance.id))
                             }
                         }
+                        
                         Picker("To Account", selection: $selectedDestinationBalanceId) {
                             ForEach(budgetStore.balances) { balance in
                                 Text(balance.name).tag(Optional(balance.id))
                             }
                         }
-                        TextField("Amount", text: $transferAmount)
-                            .keyboardType(.decimalPad)
-                        Button("Transfer") {
-                            performTransfer()
+                        
+                        HStack {
+                            Text("R")
+                                .foregroundColor(.gray)
+                            TextField("Amount", text: $transferAmount)
+                                .keyboardType(.decimalPad)
+                                .focused($isTransferAmountFocused)
                         }
-                        .disabled(selectedSourceBalanceId == nil || selectedDestinationBalanceId == nil || transferAmount.isEmpty)
+                        
+                        Button(action: {
+                            performTransfer()
+                            isTransferAmountFocused = false
+                        }) {
+                            Text("Transfer")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(selectedSourceBalanceId == nil || 
+                                selectedDestinationBalanceId == nil || 
+                                transferAmount.isEmpty)
                     }
                 }
                 
                 Section(header: Text("Transfers")) {
-                    ForEach(transactionStore.transactions.filter { $0.type == .expense && $0.title.contains("Transfer") }) { transaction in
+                    ForEach(transactionStore.transactions.filter { 
+                        $0.type == .expense && $0.title.contains("Transfer") 
+                    }) { transaction in
                         HStack {
                             Text(transaction.title)
                             Spacer()
@@ -97,6 +116,12 @@ struct BudgetView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add Balance") {
                         showingAddBalance = true
+                    }
+                }
+                
+                ToolbarItem(placement: .keyboard) {
+                    Button("Done") {
+                        isTransferAmountFocused = false
                     }
                 }
             }
@@ -156,9 +181,13 @@ struct BudgetView: View {
             transactionStore.addTransaction(sourceTransaction)
             transactionStore.addTransaction(destinationTransaction)
             
-            transferAmount = ""
-            selectedSourceBalanceId = nil
-            selectedDestinationBalanceId = nil
+            // Reset form and dismiss keyboard
+            withAnimation {
+                transferAmount = ""
+                selectedSourceBalanceId = nil
+                selectedDestinationBalanceId = nil
+                isTransferAmountFocused = false
+            }
         }
     }
 }

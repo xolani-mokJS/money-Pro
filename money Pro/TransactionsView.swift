@@ -17,12 +17,14 @@ struct TransactionsView: View {
         case all = "All"
         case income = "Income"
         case expense = "Expense"
+        case transfer = "Transfers"
         
         var icon: String {
             switch self {
             case .all: return "list.bullet"
             case .income: return "arrow.down.circle.fill"
             case .expense: return "arrow.up.circle.fill"
+            case .transfer: return "arrow.triangle.2.circlepath"
             }
         }
         
@@ -31,6 +33,7 @@ struct TransactionsView: View {
             case .all: return .primary
             case .income: return .green
             case .expense: return .red
+            case .transfer: return .blue
             }
         }
     }
@@ -62,7 +65,9 @@ struct TransactionsView: View {
         case .income:
             filtered = filtered.filter { $0.type == .income }
         case .expense:
-            filtered = filtered.filter { $0.type == .expense }
+            filtered = filtered.filter { $0.type == .expense && !$0.title.contains("Transfer") }
+        case .transfer:
+            filtered = filtered.filter { $0.title.contains("Transfer") }
         case .all:
             break
         }
@@ -120,21 +125,23 @@ struct TransactionsView: View {
                     if showFilters {
                         VStack(spacing: 12) {
                             // Transaction Type Filter
-                            HStack {
-                                ForEach(TransactionTypeFilter.allCases, id: \.self) { type in
-                                    FilterChip(
-                                        title: type.rawValue,
-                                        icon: type.icon,
-                                        isSelected: selectedTransactionType == type,
-                                        color: type.color
-                                    ) {
-                                        withAnimation {
-                                            selectedTransactionType = type
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(TransactionTypeFilter.allCases, id: \.self) { type in
+                                        FilterChip(
+                                            title: type.rawValue,
+                                            icon: type.icon,
+                                            isSelected: selectedTransactionType == type,
+                                            color: type.color
+                                        ) {
+                                            withAnimation {
+                                                selectedTransactionType = type
+                                            }
                                         }
                                     }
                                 }
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
                             
                             // Date Filter
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -264,19 +271,22 @@ struct FilterChip: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                 Text(title)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 15, weight: .medium))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14)
             .padding(.vertical, 8)
+            .frame(height: 36)
             .background(isSelected ? color.opacity(0.2) : Color(.systemBackground))
             .foregroundColor(isSelected ? color : .primary)
-            .cornerRadius(20)
+            .cornerRadius(18)
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 18)
                     .stroke(isSelected ? color : Color.gray.opacity(0.3), lineWidth: 1)
             )
         }
