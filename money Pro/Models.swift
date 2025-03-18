@@ -24,32 +24,28 @@ struct Transaction: Identifiable, Codable {
 }
 
 class TransactionStore: ObservableObject {
-    @Published var transactions: [Transaction] = [] {
-        didSet {
-            saveTransactions()
-        }
-    }
+    @Published var transactions: [Transaction] = []
     
     init() {
         loadTransactions()
     }
     
-    private func saveTransactions() {
+    func addTransaction(_ transaction: Transaction) {
+        transactions.append(transaction)
+        saveTransactions()
+    }
+    
+    func saveTransactions() {
         if let encoded = try? JSONEncoder().encode(transactions) {
-            UserDefaults.standard.set(encoded, forKey: "SavedTransactions")
+            UserDefaults.standard.set(encoded, forKey: "transactions")
         }
     }
     
     private func loadTransactions() {
-        if let savedTransactions = UserDefaults.standard.data(forKey: "SavedTransactions") {
-            if let decodedTransactions = try? JSONDecoder().decode([Transaction].self, from: savedTransactions) {
-                transactions = decodedTransactions
-            }
+        if let data = UserDefaults.standard.data(forKey: "transactions"),
+           let decoded = try? JSONDecoder().decode([Transaction].self, from: data) {
+            transactions = decoded
         }
-    }
-    
-    func addTransaction(_ transaction: Transaction) {
-        transactions.append(transaction)
     }
     
     func deleteTransaction(at offsets: IndexSet) {
