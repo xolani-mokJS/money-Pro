@@ -193,7 +193,12 @@ struct ContentView: View {
                 
                 BudgetView(transactionStore: transactionStore, budgetStore: budgetStore)
                     .tabItem {
-                        Label("Budget", systemImage: "chart.pie")
+                        Label("Overview", systemImage: "chart.pie")
+                    }
+                
+                NewBudgetView(transactionStore: transactionStore, budgetStore: budgetStore)
+                    .tabItem {
+                        Label("Budget", systemImage: "dollarsign.circle")
                     }
             }
             .navigationTitle("Hello, \(userName)")
@@ -203,7 +208,7 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        .onChange(of: showingSplashScreen) { newValue in
+        .onChange(of: showingSplashScreen) { oldValue, newValue in
             if !newValue && userName.isEmpty {
                 showingNamePrompt = true
             }
